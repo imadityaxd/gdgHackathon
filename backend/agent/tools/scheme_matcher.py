@@ -1,3 +1,4 @@
+import json
 from pydantic import BaseModel
 from typing import List
 from google import genai
@@ -18,6 +19,7 @@ def run_policy_matching(profile_json: str, score_json: str) -> List[SchemeMatchR
     
     system_prompt = """
     You are a Government Credit Compliance Agent. Your role is to evaluate informal artisan profiles against available credit programs.
+    Return a cleanly compiled SchemeMatchCollection schema.
     
     Lending Program Constraints to Evaluate:
     - mudra-shishu: Ceiling limit up to ₹50,000. Optimized for baseline material purchasing.
@@ -31,7 +33,7 @@ def run_policy_matching(profile_json: str, score_json: str) -> List[SchemeMatchR
     }
 
     response = client.models.generate_content(
-        model='gemini-1.5-flash',
+        model='gemini-2.5-flash',
         contents=[
             system_prompt,
             f"Evaluate dynamic program entry compliance for this target payload: {json.dumps(context_payload)}"
@@ -42,4 +44,9 @@ def run_policy_matching(profile_json: str, score_json: str) -> List[SchemeMatchR
             temperature=0.1
         )
     )
+    
+    # SAFE EXTRACT: Extract native parsed collections cleanly
+    if response.parsed:
+        return response.parsed.matches
+        
     return SchemeMatchCollection.model_validate_json(response.text).matches

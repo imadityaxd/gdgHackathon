@@ -5,9 +5,26 @@ from backend.services.scoring_engine import run_ai_underwriting
 router = APIRouter()
 
 @router.post("/score")
-def calculate_score(profile: ArtisanProfile):
+async def generate_score(profile: ArtisanProfile):
+
     try:
-        evaluation = run_ai_underwriting(profile)
-        return evaluation
+
+        print("REQUEST RECEIVED")
+        print(profile)
+
+        result = run_ai_underwriting(profile)
+
+        print("RESULT GENERATED")
+
+        return result
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+        print("========== FULL ERROR ==========")
+        traceback.print_exc()
+        print("================================")
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
